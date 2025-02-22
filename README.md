@@ -30,4 +30,4 @@ with the press of Start: `gb-studio-<version>_engine-add-start-wait-flag.patch`
 The `Advanced Dialogue` plugin is a fork of a now depracated plugin of the
 same name originally developed and distributed by `pau-tomas`. It has been
 modified to support "close with the press of the Start button" and to adjust
-open/close speeds from the user interface. Original project: gb-studio-plugins
+open/close speeds from the user interface. Original project: `gb-studio-plugins`
