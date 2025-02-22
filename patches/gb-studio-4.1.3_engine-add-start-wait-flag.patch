@@ -1,0 +1,66 @@
+diff -uNpr assets/engine.orig/include/ui.h assets/engine/include/ui.h
+--- assets/engine.orig/include/ui.h	2025-02-21 06:56:01.000000000 -0600
++++ assets/engine/include/ui.h	2025-02-21 06:51:30.000000000 -0600
+@@ -85,11 +85,12 @@ void ui_load_tiles(void) BANKED;
+ 
+ void ui_set_start_tile(UBYTE start_tile, UBYTE start_tile_bank) BANKED;
+ 
+-#define UI_WAIT_WINDOW  1
+-#define UI_WAIT_TEXT    2
+-#define UI_WAIT_BTN_A   4
+-#define UI_WAIT_BTN_B   8
+-#define UI_WAIT_BTN_ANY 16
++#define UI_WAIT_WINDOW    1
++#define UI_WAIT_TEXT      2
++#define UI_WAIT_BTN_A     4
++#define UI_WAIT_BTN_B     8
++#define UI_WAIT_BTN_START 16
++#define UI_WAIT_BTN_ANY   32
+ 
+ #define UI_DRAW_FRAME   1
+ #define UI_AUTOSCROLL   2
+diff -uNpr assets/engine.orig/include/vm.i assets/engine/include/vm.i
+--- assets/engine.orig/include/vm.i	2025-02-21 06:56:01.000000000 -0600
++++ assets/engine/include/vm.i	2025-02-21 06:51:30.000000000 -0600
+@@ -932,7 +932,8 @@ OP_VM_OVERLAY_WAIT      = 0x44
+ .UI_WAIT_TEXT           = 2
+ .UI_WAIT_BTN_A          = 4
+ .UI_WAIT_BTN_B          = 8
+-.UI_WAIT_BTN_ANY        = 16
++.UI_WAIT_BTN_START      = 16
++.UI_WAIT_BTN_ANY        = 32
+ ;-- Waits for the completion of one or more UI operations.
+ ; @param IS_MODAL Indicates whether the operation is modal: .UI_MODAL, or not: .UI_NONMODAL.
+ ; @param WAIT_FLAGS Bit field, set of events to be waited for:
+@@ -941,6 +942,7 @@ OP_VM_OVERLAY_WAIT      = 0x44
+ ;   `.UI_WAIT_TEXT`     - Wait until all the text finished rendering.
+ ;   `.UI_WAIT_BTN_A`    - Wait until "A" is pressed.
+ ;   `.UI_WAIT_BTN_B`    - Wait until "B" is pressed.
++;   `.UI_WAIT_BTN_START - Wait until "B" is pressed.
+ ;   `.UI_WAIT_BTN_ANY`  - Wait until any button is pressed.
+ .macro VM_OVERLAY_WAIT IS_MODAL, WAIT_FLAGS
+         .db OP_VM_OVERLAY_WAIT, #<WAIT_FLAGS, #<IS_MODAL
+diff -uNpr assets/engine.orig/src/core/ui.c assets/engine/src/core/ui.c
+--- assets/engine.orig/src/core/ui.c	2025-02-21 06:56:01.000000000 -0600
++++ assets/engine/src/core/ui.c	2025-02-21 06:51:30.000000000 -0600
+@@ -553,6 +553,8 @@ void ui_run_modal(UBYTE wait_flags) BANK
+             if (!INPUT_A_PRESSED) fail = TRUE;
+         if (wait_flags & UI_WAIT_BTN_B)
+             if (!INPUT_B_PRESSED) fail = TRUE;
++        if (wait_flags & UI_WAIT_BTN_START)
++            if (!INPUT_START_PRESSED) fail = TRUE;
+         if (wait_flags & UI_WAIT_BTN_ANY)
+             if (!INPUT_ANY_PRESSED) fail = TRUE;
+ 
+diff -uNpr assets/engine.orig/src/core/vm_ui.c assets/engine/src/core/vm_ui.c
+--- assets/engine.orig/src/core/vm_ui.c	2025-02-21 06:56:01.000000000 -0600
++++ assets/engine/src/core/vm_ui.c	2025-02-21 06:51:30.000000000 -0600
+@@ -157,6 +157,8 @@ void vm_overlay_wait(SCRIPT_CTX * THIS, 
+         if (!INPUT_A_PRESSED) fail = 1;
+     if (wait_flags & UI_WAIT_BTN_B)
+         if (!INPUT_B_PRESSED) fail = 1;
++    if (wait_flags & UI_WAIT_BTN_START)
++        if (!INPUT_START_PRESSED) fail = 1;
+     if (wait_flags & UI_WAIT_BTN_ANY)
+         if (!INPUT_ANY_PRESSED) fail = 1;
+ 
