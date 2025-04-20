@@ -1,0 +1,83 @@
+diff -uNpr assets/engine.orig/src/actor_active_index.c assets/engine/src/actor_active_index.c
+--- assets/engine.orig/src/actor_active_index.c	1969-12-31 18:00:00.000000000 -0600
++++ assets/engine/src/actor_active_index.c	2025-04-20 09:59:22.000000000 -0500
+@@ -0,0 +1,45 @@
++#pragma bank 255
++
++#include <gbdk/platform.h>
++#include "system.h"
++#include "vm.h"
++#include "actor.h"
++#include "linked_list.h"
++
++void set_actor_active_index(SCRIPT_CTX * THIS) OLDCALL BANKED {
++	UBYTE actor_idx = *(uint8_t *)VM_REF_TO_PTR(FN_ARG0);
++	UBYTE active_idx = *(uint8_t *)VM_REF_TO_PTR(FN_ARG1);
++	actor_t * actor = actors + actor_idx;
++	if (actor->active){	
++		DL_REMOVE_ITEM(actors_active_head, actor);
++		if (!actor->next) {
++			actors_active_tail = actor->prev;
++		}
++		actor_t * target_actor = actors_active_head;
++		if (target_actor){
++			while (active_idx && target_actor->next) { 
++				active_idx--; 
++				target_actor = target_actor->next; 
++			} 
++			if (active_idx){//Is end
++				target_actor->next = actor;
++				actor->prev = target_actor;
++				actor->next = 0;
++				actors_active_tail = actor;
++			} else {
++				actor->next = target_actor; 
++				if (target_actor->prev){//Is middle
++					actor->prev = target_actor->prev; 
++					target_actor->prev->next = actor; 
++				} else {//Is start
++					actor->prev = 0;
++					actors_active_head = actor;
++				}
++				target_actor->prev = actor; 
++			}
++		} else {
++			//should never happen since the player actor is always in the list but just in case.
++			actors_active_tail = actors_active_head = actor;
++		}
++	}
++}
+diff -uNpr assets/engine.orig/src/core/actor.c assets/engine/src/core/actor.c
+--- assets/engine.orig/src/core/actor.c	2025-04-20 09:57:51.000000000 -0500
++++ assets/engine/src/core/actor.c	2025-04-20 10:01:17.000000000 -0500
+@@ -82,7 +82,7 @@ void actors_update(void) NONBANKED {
+ 
+     // Convert scroll pos to 16px tile coordinates
+     // allowing full range of scene to be represented in 7 bits
+-    // offset by 64 to allow signed comparisions on
++    // offset by 64 to allow signed comparisons on
+     // unsigned int values (is faster)
+     screen_tile16_x = (draw_scroll_x >> 4) + TILE16_OFFSET;
+     screen_tile16_y = (draw_scroll_y >> 4) + TILE16_OFFSET;
+@@ -328,10 +328,10 @@ actor_t *actor_in_front_of_player(UBYTE 
+ }
+ 
+ actor_t *actor_overlapping_player(UBYTE inc_noclip) BANKED {
+-    actor_t *actor = PLAYER.prev;
++    actor_t *actor = actors_active_tail;
+ 
+     while (actor) {
+-        if (!inc_noclip && !actor->collision_enabled) {
++        if (actor == &PLAYER || (!inc_noclip && !actor->collision_enabled)) {
+             actor = actor->prev;
+             continue;
+         };
+@@ -347,7 +347,7 @@ actor_t *actor_overlapping_player(UBYTE 
+ }
+ 
+ actor_t *actor_overlapping_bb(bounding_box_t *bb, point16_t *offset, actor_t *ignore, UBYTE inc_noclip) BANKED {
+-    actor_t *actor = &PLAYER;
++    actor_t *actor = actors_active_tail;
+ 
+     while (actor) {
+         if (actor == ignore || (!inc_noclip && !actor->collision_enabled)) {

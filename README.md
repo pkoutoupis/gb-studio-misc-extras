@@ -31,3 +31,7 @@ The `Advanced Dialogue` plugin is a fork of a now depracated plugin of the
 same name originally developed and distributed by `pau-tomas`. It has been
 modified to support "close with the press of the Start button" and to adjust
 open/close speeds from the user interface. Original project: `gb-studio-plugins`
+
+The `Edit Actor Active Index` plugin is a modified condensed and minimal port of
+Mico27's plugin of the same name. It is used to render actors in a specific order.
+Sort of like defining z-index of actors on screen.
