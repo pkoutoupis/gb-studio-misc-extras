@@ -26,7 +26,7 @@ The `Advanced Dialogue` plugin requires the following patch to enable close
 with the press of Start: `gb-studio-<version>_engine-add-start-wait-flag.patch`
 
 The `Edit Actor Active Index` plugin requires the following patch to properly
-use the Set Actor Active Index: `gb-studio-4.1.3_engine-set-actor-active-index.patch`
+use the Set Actor Active Index: `gb-studio-<version>_engine-set-actor-active-index.patch`
 
 ## Additional Notes
 
